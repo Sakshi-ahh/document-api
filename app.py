@@ -10,7 +10,15 @@ API_KEY = "123456"
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    key = request.headers.get('Authorization') or request.headers.get('api-key')
+   key = (
+    request.headers.get('Authorization')
+    or request.headers.get('api-key')
+    or request.headers.get('x-api-key')
+    or request.headers.get('apikey')
+)
+
+if key != API_KEY:
+    return jsonify({"error": "Unauthorized"}), 401
     if key != API_KEY:
         return jsonify({"error": "Unauthorized"}), 401
 
