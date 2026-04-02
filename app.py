@@ -11,7 +11,7 @@ API_KEY = "123456"
 @app.route('/analyze', methods=['POST'])
 def analyze():
     # 🔐 API KEY CHECK
-    key = request.headers.get('Authorization')
+    key = request.headers.get('Authorization') or request.headers.get('api-key')
     if key != API_KEY:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -53,20 +53,20 @@ def analyze():
     invoice = re.findall(r'INV\d+', text)
 
     # 📊 RESULT
-    result = {
-        "extracted_data": {
-            "name": name[0] if name else None,
-            "date": date[0] if date else None,
-            "amount": amount[0] if amount else None,
-            "invoice_number": invoice[0] if invoice else None
-        },
-        "metadata": {
-            "length": len(text),
-            "processed": True
-        },
-        "file_type": file.filename.split('.')[-1],
-        "raw_text": text[:300]
-    }
+   result = {
+    "fileName": file.filename,
+
+    "summary": text[:150],
+
+    "entities": {
+        "name": name[0] if name else None,
+        "date": date[0] if date else None,
+        "amount": amount[0] if amount else None,
+        "invoice_number": invoice[0] if invoice else None
+    },
+
+    "sentiment": "neutral"
+}
 
     return jsonify(result)
 
