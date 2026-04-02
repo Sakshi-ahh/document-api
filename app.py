@@ -10,15 +10,13 @@ API_KEY = "123456"
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-   key = (
-    request.headers.get('Authorization')
-    or request.headers.get('api-key')
-    or request.headers.get('x-api-key')
-    or request.headers.get('apikey')
-)
+    key = (
+        request.headers.get('Authorization')
+        or request.headers.get('api-key')
+        or request.headers.get('x-api-key')
+        or request.headers.get('apikey')
+    )
 
-if key != API_KEY:
-    return jsonify({"error": "Unauthorized"}), 401
     if key != API_KEY:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -32,19 +30,13 @@ if key != API_KEY:
     text = ""
 
     if file.filename.endswith('.pdf'):
-        try:
-            with pdfplumber.open(file) as pdf:
-                for page in pdf.pages:
-                    text += page.extract_text() or ""
-        except:
-            return jsonify({"error": "Error reading PDF"}), 500
+        with pdfplumber.open(file) as pdf:
+            for page in pdf.pages:
+                text += page.extract_text() or ""
 
     elif file.filename.endswith(('.png', '.jpg', '.jpeg')):
-        try:
-            image = Image.open(file)
-            text = pytesseract.image_to_string(image)
-        except:
-            return jsonify({"error": "Error reading image"}), 500
+        image = Image.open(file)
+        text = pytesseract.image_to_string(image)
 
     else:
         return jsonify({"error": "Unsupported file type"}), 400
