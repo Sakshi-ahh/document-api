@@ -42,17 +42,28 @@ def analyze():
         except:
             return jsonify({"error": "Error reading image"}), 500
 
-    # ❌ UNSUPPORTED FILE
     else:
         return jsonify({"error": "Unsupported file type"}), 400
 
-    # 🧠 DATA EXTRACTION
-    name = re.findall(r'Name[:\- ]+(.*)', text)
-    date = re.findall(r'\d{2}/\d{2}/\d{4}', text)
-    amount = re.findall(r'(?:Rs\.?|INR)\s?\d+', text)
-    invoice = re.findall(r'(INV[- ]?\d+)', text)
+    # 🧠 EXTRACTION
 
-    # 😊 SENTIMENT
+    # Name (full name)
+    name_match = re.search(r'Name[:\- ]+([A-Za-z ]+)', text)
+    name = name_match.group(1).strip() if name_match else None
+
+    # Date
+    date_match = re.search(r'\d{2}/\d{2}/\d{4}', text)
+    date = date_match.group(0) if date_match else None
+
+    # Amount (improved)
+    amount_match = re.search(r'(?:Rs\.?|INR)?\s?\d+(?:,\d+)*(?:\.\d{2})?\s?INR?', text)
+    amount = amount_match.group(0) if amount_match else None
+
+    # Invoice
+    invoice_match = re.search(r'INV\d+', text)
+    invoice = invoice_match.group(0) if invoice_match else None
+
+    # Sentiment
     if "paid" in text.lower():
         sentiment = "positive"
     elif "due" in text.lower():
@@ -60,26 +71,29 @@ def analyze():
     else:
         sentiment = "neutral"
 
-    # 📊 FINAL RESULT (IMPORTANT — OUTSIDE if/else)
+    # Document type
+    document_type = "invoice" if invoice or amount else "general"
+
+    # Summary
+    summary = f"Name: {name if name else 'Unknown'}\nDate: {date if date else 'Unknown'}\nAmount: {amount if amount else 'Not Found'}"
+
+    # Final Output
     result = {
         "fileName": file.filename,
-
-        "summary": f"This document belongs to {name[0] if name else 'Unknown'} dated {date[0] if date else 'Unknown'} with an amount of {amount[0] if amount else 'Unknown'}",
-
+        "summary": summary,
         "entities": {
-            "name": name[0] if name else None,
-            "date": date[0] if date else None,
-            "amount": amount[0] if amount else None,
-            "invoice_number": invoice[0] if invoice else None
+            "name": name,
+            "date": date,
+            "amount": amount,
+            "invoice_number": invoice
         },
-
         "sentiment": sentiment,
-
-        "confidence_score": round(len(text)/100, 2),
-        "document_type": "invoice" if amount else "general"
+        "confidence_score": round(len(text) / 100, 2),
+        "document_type": document_type
     }
 
     return jsonify(result)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
