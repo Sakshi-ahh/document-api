@@ -11,10 +11,13 @@ API_KEY = "123456"
 @app.route('/analyze', methods=['POST'])
 def analyze():
     # 🔐 API KEY CHECK
-    key = request.headers.get('Authorization') or request.headers.get('api-key')
-    if key != API_KEY:
-        return jsonify({"error": "Unauthorized"}), 401
+key = request.headers.get('Authorization') or request.headers.get('api-key')
 
+if key:
+    key = key.replace("Bearer ", "").strip()
+
+if key != API_KEY:
+    return jsonify({"error": "Unauthorized"}), 401
     # 📂 FILE CHECK
     file = request.files.get('file')
     if not file:
